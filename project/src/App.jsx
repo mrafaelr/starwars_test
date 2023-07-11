@@ -5,6 +5,7 @@ import './App.css'
 function App() {
   const [data, setData] = useState([]);
   const [dist, setDist] = useState("");
+  const [sumbmitted, setSubmitted] = useState(false);
 
   function parse_consumables(consumables) {
     const cons = {
@@ -73,7 +74,7 @@ function App() {
 
   return (
     <>
-<form onSubmit={(e) => {
+<     form onSubmit={(e) => {
         e.preventDefault();
         handleClick();
       }}>
@@ -82,9 +83,19 @@ function App() {
         <input id="dist" type="text" placeholder="0" value={dist} onChange={(e) => {
           setDist(Number(e.target.value))
         }} />
-        <input type='submit' disabled={!(typeof(dist) == 'number')}/>
+        <input type='submit' onClick={() => setSubmitted(true)} disabled={!(typeof(dist) == 'number')}/>
         {(!(typeof(dist) == 'number')) && <p>O valor deve ser um número!</p>}
       </form>
+      {data && sumbmitted &&(
+        <>
+          <h3>O número de paradas necessárias por cada espaçonave para percorrer {dist} mega lights é:</h3>
+          <ul>
+            {data.map((ship) => (
+              <li key={ship.id}>{ship.name}, {ship.stops}</li>
+            ))}
+          </ul>
+        </>
+      )}
     </>
   )
 }

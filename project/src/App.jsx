@@ -78,11 +78,12 @@ function App() {
         handleClick();
       }}>
         <p>Infome a distância a ser percorrida pelas aeronaves em mega lights:</p>
-        <label htmlFor="dist">Distância: </label><br />
+        <label htmlFor="dist">Distância: </label>
         <input id="dist" type="text" placeholder="0" value={dist} onChange={(e) => {
-          setDist(e.target.value)
+          setDist(Number(e.target.value))
         }} />
-        <input type='submit'/>
+        <input type='submit' disabled={!(typeof(dist) == 'number')}/>
+        {(!(typeof(dist) == 'number')) && <p>O valor deve ser um número!</p>}
       </form>
     </>
   )

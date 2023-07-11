@@ -5,6 +5,29 @@ import './App.css'
 function App() {
   const [data, setData] = useState([]);
 
+  function parse_consumables(consumables) {
+    const cons = {
+      'value':Number(consumables.split(' ')[0]),
+      'unit': consumables.split(' ')[1]
+    }
+  
+    if(['day', 'days'].includes(cons.unit)){
+      cons.value = cons.value*24;
+      cons.unit = "hours"
+    } if(['week', 'weeks'].includes(cons.unit)){
+      cons.value = cons.value*168;
+      cons.unit = "hours"
+    } if(['month', 'months'].includes(cons.unit)){
+      cons.value = cons.value*720;
+      cons.unit = "hours"
+    }  if(['year', 'years'].includes(cons.unit)){
+      cons.value = cons.value*8760;
+      cons.unit = "hours"
+    }
+  
+    return (cons);
+  }
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -17,7 +40,7 @@ function App() {
             const newRecord = {'id': i,
                                'name': ship.name,
                                'MGLT': Number(ship.MGLT),
-                               'consumables': ship.consumables
+                               'consumables': parse_consumables(ship.consumables)
               }
             ships.push(newRecord);
             i++;

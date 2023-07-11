@@ -4,6 +4,7 @@ import './App.css'
 
 function App() {
   const [data, setData] = useState([]);
+  const [dist, setDist] = useState("");
 
   function parse_consumables(consumables) {
     const cons = {
@@ -59,9 +60,30 @@ function App() {
 
   }, []);
 
+  function handleClick() {
+
+    const newData = data.map(ship => {
+      const stops = (dist/(ship.MGLT*ship.consumables.value))
+      return {... ship,
+      'stops': Math.trunc(stops)};
+    })
+
+    setData(newData);
+  }
+
   return (
     <>
-
+<form onSubmit={(e) => {
+        e.preventDefault();
+        handleClick();
+      }}>
+        <p>Infome a distância a ser percorrida pelas aeronaves em mega lights:</p>
+        <label htmlFor="dist">Distância: </label><br />
+        <input id="dist" type="text" placeholder="0" value={dist} onChange={(e) => {
+          setDist(e.target.value)
+        }} />
+        <input type='submit'/>
+      </form>
     </>
   )
 }

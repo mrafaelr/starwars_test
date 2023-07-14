@@ -91,6 +91,9 @@ function App() {
         <label htmlFor="dist">Distância: </label>
         <input id="dist" type="text" placeholder="0" value={dist} onChange={(e) => {
           setDist(Number(e.target.value))
+          if(isNaN(dist)){
+            setDist(0);
+          }
           setData([])
           setSubmitted(false)
         }} />

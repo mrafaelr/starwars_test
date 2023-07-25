@@ -3,9 +3,11 @@ import { useState, useEffect } from 'react'
 import './App.css'
 
 function App() {
+  const [doneFetching, setDoneFetching] = useState(false);
   const [data, setData] = useState([]);
   const [dist, setDist] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [results, setResults] = useState([]);
 
   function parse_consumables(consumables) {
     const cons = {
@@ -27,57 +29,64 @@ function App() {
       cons.unit = "hours"
     }
   
-    return (cons);
+    return (cons.value);
+  }
+
+  async function fetchData(url, accumulator = []) {
+    try {
+      const response = await fetch(url);
+      const data =  await response.json();
+      
+      accumulator = accumulator.concat(data.results);
+  
+      if (data.next) {
+        return fetchData(data.next, accumulator);
+      } else{
+        setDoneFetching(true);
+        return accumulator;
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      return accumulator;
+    }
   }
 
   useEffect(() => {
-    const fetchData = async () => {
+    const apiURL = 'https://swapi.dev/api/starships/';
+
+    async function fetchDataFromAPI() {
       try {
-        const response = await fetch('https://swapi.dev/api/starships/');
-        if (response.ok) {
-          const jsonData = await response.json();
-          const ships = [];
-          let i = 0;
-          for(const ship of jsonData.results) {
-            const newRecord = {'id': i,
-                               'name': ship.name,
-                               'MGLT': Number(ship.MGLT),
-                               'consumables': parse_consumables(ship.consumables)
-              }
-            ships.push(newRecord);
-            i++;
-          }
-          
-          const newData = ships.map(ship => {
-            const stops = (dist/(ship.MGLT*ship.consumables.value))
-            return {... ship,
-            'stops': Math.trunc(stops)};
-          })
-      
-          setData(newData);
-        }
-        else {
-          console.error('GET request failed with status code:', response.status);
-        }
+        const accumulatedResults = await fetchData(apiURL);
+        setResults(accumulatedResults);
       } catch (error) {
-        console.error('Error:', error)
+        console.error('Error fetching data:', error);
       }
-    };
-    if(submitted){
-      fetchData();
     }
 
-  }, [submitted, dist]);
+    fetchDataFromAPI();
+  }, [submitted]);
+
+
 
   function handleClick() {
-
-    const newData = data.map(ship => {
-      const stops = (dist/(ship.MGLT*ship.consumables.value))
-      return {... ship,
-      'stops': Math.trunc(stops)};
-    })
-
-    setData(newData);
+    
+    let filteredShips = []
+    let i = 0;
+    for(const ship of results){
+      let newShip = {
+      "id": i,
+      "name": ship.name,
+      "model": ship.model,
+      "MGLT": Number(ship.MGLT),
+      "consumables": parse_consumables(ship.consumables),
+      "stops": Math.floor(dist/(Number(ship.MGLT)*parse_consumables(ship.consumables)))
+      }
+      filteredShips.push(newShip);
+      i++;
+    }
+    setData(filteredShips);
+    setSubmitted(true);
+    setDoneFetching(false);
   }
 
   return (
@@ -85,7 +94,6 @@ function App() {
       <form onSubmit={(e) => {
         e.preventDefault();
         handleClick();
-        setSubmitted(true)
       }}>
         <p>Infome a distância a ser percorrida pelas aeronaves em mega lights:</p>
         <label htmlFor="dist">Distância: </label>
@@ -96,16 +104,18 @@ function App() {
           }
           setData([])
           setSubmitted(false)
+          setDoneFetching(false)
         }} />
         <input type='submit' disabled={!(typeof(dist) == 'number')}/>
         {(!(typeof(dist) == 'number')) && <p>O valor deve ser um número!</p>}
       </form>
-      {data && submitted &&(
+      {submitted && (<h3>Carregando</h3>)}
+      {doneFetching && submitted &&(
         <>
           <h3>O número de paradas necessárias por cada espaçonave para percorrer {dist} mega lights é:</h3>
           <ul>
             {data.map((ship) => (
-              <li key={ship.id}>{ship.name}, {ship.stops}</li>
+              <li key={ship.id}>{ship.name}, {isNaN(ship.stops)? "Unknown" : ship.stops}</li>
             ))}
           </ul>
         </>

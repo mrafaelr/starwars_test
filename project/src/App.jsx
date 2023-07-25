@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 import './App.css'
 
@@ -32,7 +32,7 @@ function App() {
     return (cons.value);
   }
 
-  async function fetchData(url, accumulator = []) {
+  const fetchData = useCallback( async (url, accumulator = []) => {
     try {
       const response = await fetch(url);
       const data =  await response.json();
@@ -49,7 +49,7 @@ function App() {
       console.error('Error fetching data:', error);
       return accumulator;
     }
-  }
+  }, []);
 
   useEffect(() => {
     const apiURL = 'https://swapi.dev/api/starships/';
@@ -64,7 +64,7 @@ function App() {
     }
 
     fetchDataFromAPI();
-  }, [submitted]);
+  }, [submitted, fetchData]);
 
 
 
@@ -109,7 +109,7 @@ function App() {
         <input type='submit' disabled={!(typeof(dist) == 'number')}/>
         {(!(typeof(dist) == 'number')) && <p>O valor deve ser um número!</p>}
       </form>
-      {submitted && (<h3>Carregando</h3>)}
+      {submitted && !doneFetching && (<h3>Carregando</h3>)}
       {doneFetching && submitted &&(
         <>
           <h3>O número de paradas necessárias por cada espaçonave para percorrer {dist} mega lights é:</h3>
